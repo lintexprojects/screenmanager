@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Скринменеджер ЛИнТех 28</title>
+    <style>
+        /* Сброс стилей и базовые настройки */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+        }
+
+        /* Контейнер для адаптивного изображения */
+        .screen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            transition: background 0.3s ease;
+        }
+
+        /* Изображение с адаптивным заполнением */
+        #screenImage {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: opacity 0.5s ease;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        /* Панель информации */
+        .info-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #4CAF50;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: clamp(12px, 1.5vw, 16px);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            backdrop-filter: blur(10px);
+            line-height: 1.5;
+            min-width: min(300px, 90vw);
+            z-index: 10;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Индикатор периода */
+        .period-indicator {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: clamp(14px, 1.8vw, 18px);
+            font-weight: 600;
+            border: 2px solid;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+        }
+
+        .period-night { color: #9C27B0; border-color: #9C27B0; }
+        .period-morning { color: #FF9800; border-color: #FF9800; }
+        .period-day { color: #4CAF50; border-color: #4CAF50; }
+        .period-evening { color: #2196F3; border-color: #2196F3; }
+        .period-error { color: #F44336; border-color: #F44336; }
+
+        /* Статус автообновления */
+        .refresh-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff88;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: clamp(11px, 1.2vw, 14px);
+            font-family: 'Consolas', monospace;
+            z-index: 10;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        /* Админ-меню */
+        .admin-menu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 15, 25, 0.98);
+            border: 2px solid #00ff88;
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 30px);
+            color: white;
+            width: min(90vw, 500px);
+            max-height: 90vh;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.5);
+          backdrop-filter: blur(25px);
+        }
+
+        .admin-menu h2 {
+            color: #00ff88;
+            margin-bottom: 25px;
+            font-size: clamp(20px, 3vw, 26px);
+            text-align: center;
+            text-shadow: 0 0 15px #00ff88;
+        }
+
+        .pin-input {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(10px, 2vw, 15px);
+            margin-bottom: 25px;
+        }
+
+        .pin-input input {
+            width: 100%;
+            aspect-ratio: 1;
+            text-align: center;
+            font-size: clamp(24px, 4vw, 32px);
+            border: 3px solid #444;
+            border-radius: 10px;
+            background: #111;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .pin-input input:focus {
+            border-color: #00ff88;
+            box-shadow: 0 0 25px #00ff88;
+            transform: scale(1.05);
+            outline: none;
+        }
+
+        .menu-options {
+            display: grid;
+            gap: clamp(10px, 2vw, 15px);
+            margin-bottom: 25px;
+        }
+
+        .menu-btn {
+            padding: clamp(12px, 2vw, 16px);
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid #00ff88;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: clamp(14px, 2vw, 16px);
+            transition: all 0.3s;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .menu-btn:hover {
+            background: linear-gradient(135deg, #00ff88, #009955);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .time-input {
+            padding: clamp(10px, 2vw, 14px);
+            border: 2px solid #444;
+            border-radius: 8px;
+            background: #111;
+            color: white;
+            width: 100%;
+            font-size: clamp(14px, 2vw, 16px);
+        }
+
+        .time-input:focus {
+            border-color: #00ff88;
+            outline: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #pinError {
+            color: #ff5555;
+            text-align: center;
+            margin: 15px 0;
+            font-size: clamp(14px, 2vw, 16px);
+            background: rgba(255, 85, 85, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ff5555;
+        }
+
+        .menu-status {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #333;
+            color: #aaa;
+            font-size: clamp(12px, 1.5vw, 14px);
+            line-height: 1.8;
+        }
+
+        .menu-status div {
+            margin: 6px 0;
+        }
+
+        /* Кнопка закрытия меню */
+        .close-menu {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ff5555;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .close-menu:hover {
+            background: #ff3333;
+            transform: rotate(90deg);
+        }
+
+        /* Адаптивные медиа-запросы */
+        @media (max-width: 768px) {
+            .info-panel {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+            }
+            
+            .period-indicator {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                text-align: center;
+                white-space: normal;
+            }
+            
+            .refresh-status {
+                top: 70px;
+                right: 10px;
+            }
+        }
+      @media (max-width: 480px) {
+            .admin-menu {
+                width: 95vw;
+                padding: 20px 15px;
+            }
+            
+            .pin-input {
+                gap: 8px;
+            }
+        }
+
+        /* Анимация загрузки */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #screenImage {
+            animation: fadeIn 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Основной экран -->
+    <div class="screen-container">
+        <img id="screenImage" src="" alt="Текущая заставка">
+        <div id="periodIndicator" class="period-indicator">Загрузка...</div>
+        <div id="refreshStatus" class="refresh-status">🔄 90с</div>
+        <div id="infoPanel" class="info-panel">
+            <div style="font-weight: bold; margin-bottom: 8px;" id="periodTitle"></div>
+            <div style="font-size: 0.9em; color: #aaa;" id="dateTime"></div>
+            <div style="font-size: 0.8em; color: #666; margin-top: 8px; border-top: 1px solid #333; padding-top: 5px;" id="fileInfo"></div>
+        </div>
+    </div>
+
+    <!-- Админ-меню -->
+    <div id="adminMenu" class="admin-menu">
+        <button class="close-menu" onclick="hideAdminMenu()">×</button>
+        <h2>🔧 Скринменеджер ЛИнТех 28</h2>
+        
+        <!-- Ввод PIN -->
+        <div id="pinSection">
+            <div class="pin-input">
+                <input type="password" maxlength="1" data-index="0" autocomplete="off">
+                <input type="password" maxlength="1" data-index="1" autocomplete="off">
+                <input type="password" maxlength="1" data-index="2" autocomplete="off">
+                <input type="password" maxlength="1" data-index="3" autocomplete="off">
+            </div>
+            <div id="pinError" class="hidden">Неверный PIN!</div>
+        </div>
+
+        <!-- Основное меню -->
+        <div id="mainMenu" class="hidden">
+            <div class="menu-options">
+                <button class="menu-btn" onclick="simulateTime()">
+                    🕐 Симулировать время
+                </button>
+                
+                <input type="datetime-local" id="simulatedTime" class="time-input">
+                
+                <button class="menu-btn" onclick="changeSlideManual()">
+                    🔄 Принудительно сменить заставку
+                </button>
+                
+                <select id="slideSelect" class="time-input">
+                    <option value="auto">Автоматически (по расписанию)</option>
+                    <option value="empty">empty.png (ночной)</option>
+                    <option value="readyto">readyto.png (утренний)</option>
+                    <option value="tosleep">tosleep.png (вечерний)</option>
+                    <option value="1">Заставка 1</option>
+                    <option value="2">Заставка 2</option>
+                    <option value="3">Заставка 3</option>
+                    <option value="4">Заставка 4</option>
+                    <option value="5">Заставка 5</option>
+                    <!-- Добавьте остальные при необходимости -->
+                </select>
+                
+                <button class="menu-btn" onclick="refreshPage()">
+                    ♻️ Обновить страницу
+                </button>
+                
+                <button class="menu-btn" onclick="toggleAutoRefresh()" id="toggleRefreshBtn">
+                    ⏸️ Приостановить автообновление
+                </button>
+                
+                <button class="menu-btn" onclick="showCredits()">
+                    ℹ️ Кредиты
+                </button>
+                
+                <button class="menu-btn" onclick="forceRefresh()">
+                    ⚡ Принудительное обновление
+                </button>
+            </div>
+            
+            <div class="menu-status">
+                <div>📊 Статус: <span id="currentStatus">Онлайн</span></div>
+                <div>⏰ Период: <span id="periodStatus">Загрузка...</span></div>
+                <div>🖥️ Разрешение: <span id="resolutionStatus">...</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно кредитов -->
+    <div id="creditsModal" class="admin-menu hidden" style="width: min(90vw, 600px);">
+        <button class="close-menu" onclick="hideCredits()">×</button>
+        <h2 style="color: #00ff88;">Кредиты</h2>
+        
+        <div style="padding: 20px; line-height: 1.8; font-size: 16px;">
+            <div style="margin-bottom: 30px; padding: 20px; background: rgba(0, 255, 136, 0.1); border-radius: 10px; border-left: 4px solid #00ff88;">
+                <p style="font-size: 18px; font-weight: 500; margin-bottom: 10px; color: #00ff88;">
+                    Скринменеджер ЛИнТех 28
+                </p>
+                <p style="color: #aaa; font-style: italic;">
+                    "Идея приведена в код Львом П. лИнТех 28 2026"
+                </p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #4CAF50; margin-bottom: 15px;">🚀 Возможности системы:</h3>
+                <ul style="color: #ccc; padding-left: 20px; margin-bottom: 25px;">
+                    <li>Автоматическая смена заставок по расписанию</li>
+                    <li>Адаптация под любые разрешения экрана</li>
+                    <li>24/7 стабильная работа</li>
+                    <li>Защищенная админ-панель</li>
+                    <li>Интеграция с GitHub для обновления контента</li>
+                    <li>Отказоустойчивость и обработка ошибок</li>
+                </ul>
+            </div>
+            
+            <div style="color: #888; font-size: 14px; border-top: 1px solid #333; padding-top: 20px;">
+                <p>Версия: 2.0.0</p>
+                <p>Лицензия: Общественное достояние</p>
+                <p>/</p>
+            </div>
+        </div>
+        
+        <button class="menu-btn" onclick="hideCredits()" style="margin-top: 20px;">
+            Закрыть
+        </button>
+    </div>
+
+    <script src="screenmanager.js"></script>
+</body>
+</html>
