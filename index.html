@@ -1,167 +1,327 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Тест картинок - Скринменеджер</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Скринменеджер ЛИнТех 28</title>
     <style>
-        body {
+        * { margin: 0; padding: 0; }
+        body, html { 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background: #000;
+        }
+        #screenImage {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .admin-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: #2c3e50;
+            border: 2px solid #34495e;
+            padding: 15px;
             font-family: monospace;
-            background: black;
-            color: white;
-            padding: 20px;
+            color: #ecf0f1;
+            display: none;
+            z-index: 1000;
         }
-        .status {
+        .pin-input {
             margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #444;
         }
-        .success {
-            color: lime;
-            border-color: lime;
+        .pin-input input {
+            width: 40px;
+            height: 50px;
+            text-align: center;
+            font-size: 24px;
+            margin: 0 5px;
+            background: #34495e;
+            border: 1px solid #7f8c8d;
+            color: white;
         }
-        .error {
-            color: red;
-            border-color: red;
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            background: #3498db;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-family: monospace;
         }
-        img {
-            max-width: 300px;
-            max-height: 200px;
-            margin: 10px;
-            border: 2px solid white;
+        button:hover {
+            background: #2980b9;
+        }
+        select, input[type="datetime-local"] {
+            padding: 8px;
+            margin: 5px;
+            background: #34495e;
+            border: 1px solid #7f8c8d;
+            color: white;
+            font-family: monospace;
         }
     </style>
 </head>
 <body>
-    <h1>Тест загрузки картинок</h1>
-    <div id="results"></div>
+    <img id="screenImage" src="" alt="">
     
+    <div id="adminPanel" class="admin-panel">
+        <h3>СКРИНМЕНЕДЖЕР v1.0</h3>
+        <div id="pinSection">
+            <div>PIN код:</div>
+            <div class="pin-input">
+                <input type="password" maxlength="1" data-index="0">
+                <input type="password" maxlength="1" data-index="1">
+                <input type="password" maxlength="1" data-index="2">
+                <input type="password" maxlength="1" data-index="3">
+            </div>
+            <div id="pinError" style="color: #e74c3c; display: none;">Неверный PIN</div>
+        </div>
+        
+        <div id="mainMenu" style="display: none;">
+            <div>
+                <button onclick="simulateTime()">Симит. время</button>
+                <input type="datetime-local" id="simulatedTime">
+            </div>
+            <div>
+                <button onclick="changeSlide()">Сменить заставку</button>
+                <select id="slideSelect">
+                    <option value="auto">Авто</option>
+                    <option value="empty">empty.png</option>
+                    <option value="readyto">readyto.png</option>
+                    <option value="tosleep">tosleep.png</option>
+                    <option value="1">Заставка 1</option>
+                    <option value="2">Заставка 2</option>
+                    <option value="3">Заставка 3</option>
+                    <option value="4">Заставка 4</option>
+                    <option value="5">Заставка 5</option>
+                </select>
+            </div>
+            <div>
+                <button onclick="refreshPage()">Обновить стр.</button>
+                <button onclick="toggleAutoRefresh()" id="refreshBtn">Авто: ВКЛ</button>
+            </div>
+            <div>
+                <button onclick="showCredits()">Кредиты</button>
+                <button onclick="hideAdminPanel()" style="background: #e74c3c;">Закрыть</button>
+            </div>
+            <div style="margin-top: 15px; color: #95a5a6; font-size: 12px;">
+                Статус: <span id="statusText">Онлайн</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="credits" class="admin-panel" style="display: none; width: 300px;">
+        <h3>КРЕДИТЫ</h3>
+        <div style="padding: 10px; background: #34495e; margin: 10px 0;">
+            "Идея приведена в код Львом П.<br>лИнТех 28 2026"
+        </div>
+        <button onclick="hideCredits()" style="background: #27ae60;">Закрыть</button>
+    </div>
+
     <script>
-        // Все картинки которые должны быть в корне
-        const images = [
-            'empty.png',    // 1. Ночной режим
-            'readyto.png',  // 2. Утренний
-            'tosleep.png',  // 3. Вечерний
-            'missing.png',  // 4. При ошибке
-            '01.png',       // 5. Заставка 1
-            '02.png',       // 6. Заставка 2
-            '03.png',       // 7. Заставка 3 (сегодня 3 фев)
-            '04.png',       // 8. Заставка 4
-            '05.png',       // 9. Заставка 5
-            '06.png',       // 10. Заставка 6
-            '07.png',       // 11. Заставка 7
-            '08.png',       // 12. Заставка 8
-            '09.png',       // 13. Заставка 9
-            '10.png',       // 14. Заставка 10
-            '11.png',       // 15. Заставка 11
-            '12.png',       // 16. Заставка 12
-            '13.png',       // 17. Заставка 13
-            '14.png',       // 18. Заставка 14
-            '15.png',       // 19. Заставка 15
-            '16.png',       // 20. Заставка 16
-            '17.png',       // 21. Заставка 17
-            '18.png',       // 22. Заставка 18
-            '19.png',       // 23. Заставка 19
-            '20.png'        // 24. Заставка 20
-        ];
-        
-        const results = document.getElementById('results');
-        let loaded = 0;
-        let failed = 0;
-        
-        function testImage(url, index) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                const startTime = Date.now();
-                
-                img.onload = function() {
-                    const time = Date.now() - startTime;
-                    loaded++;
-                    resolve({
-                        name: url,
-                        success: true,
-                        time: time,
-                        img: img
-                    });
+        // Конфиг
+        const CONFIG = {
+            PIN: "2855",
+            AUTO_REFRESH: 90000,
+            IMAGE_PATH: ""  // Картинки в корне
+        };
+
+        // Глобальные переменные
+        let currentPin = "";
+        let autoRefresh = true;
+        let refreshInterval;
+        let simulatedTime = null;
+        let manualImage = null;
+
+        // Инициализация
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '1') {
+                showAdmin();
+            }
+            if (e.key === 'Escape') {
+                hideAdminPanel();
+                hideCredits();
+            }
+        });
+
+        window.onload = function() {
+            initPinInput();
+            loadImage();
+            startAutoRefresh();
+            console.log("Скринменеджер запущен");
+        };
+
+        // Основная функция загрузки картинки
+        function loadImage() {
+            let filename = getCurrentImage();
+            let imgUrl = filename + '?t=' + Date.now();
+            let img = document.getElementById('screenImage');
+            
+            console.log("Загружаем:", filename);
+            
+            img.onload = function() {
+                console.log("Картинка загружена:", filename);
+                updateStatus();
+            };
+            
+            img.onerror = function() {
+                console.log("Ошибка загрузки:", filename);
+                // Пробуем missing.png
+                if (filename !== 'missing.png') {
+                    img.src = 'missing.png?t=' + Date.now();
+                }
+            };
+            
+            img.src = imgUrl;
+        }
+
+        // Определяем какая картинка нужна
+        function getCurrentImage() {
+            if (manualImage) return manualImage;
+            
+            let now = simulatedTime ? new Date(simulatedTime) : new Date();
+            let hour = now.getHours();
+            let minute = now.getMinutes();
+            let time = hour + minute/60;
+            
+            // Ночь: 19:00-7:00
+            if (time >= 19 || time < 7) return 'empty.png';
+            // Утро: 7:00-7:10
+            if (time >= 7 && time < 7.167) return 'readyto.png';
+            // Вечер: 17:00-19:00
+            if (time >= 17 && time < 19) return 'tosleep.png';
+            // День: 7:10-17:00 - заставки по дням
+            let day = now.getDate();
+            let slide = ((day - 1) % 20) + 1;
+            return slide.toString().padStart(2, '0') + '.png';
+        }
+
+        // Автообновление
+        function startAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            if (!autoRefresh) return;
+            
+            refreshInterval = setInterval(() => {
+                loadImage();
+            }, CONFIG.AUTO_REFRESH);
+        }
+
+        // Админ-панель
+        function showAdmin() {
+            document.getElementById('adminPanel').style.display = 'block';
+            resetPinInput();
+        }
+
+        function hideAdminPanel() {
+            document.getElementById('adminPanel').style.display = 'none';
+            hideCredits();
+        }
+
+        function initPinInput() {
+            let inputs = document.querySelectorAll('.pin-input input');
+            inputs.forEach((input, i) => {
+                input.oninput = (e) => {
+                    if (e.target.value.length === 1) {
+                        currentPin += e.target.value;
+                        if (i < 3) inputs[i+1].focus();
+                        else checkPin();
+                    }
                 };
-                
-                img.onerror = function() {
-                    failed++;
-                    resolve({
-                        name: url,
-                        success: false,
-                        time: Date.now() - startTime,
-                        img: null
-                    });
+                input.onkeydown = (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && i > 0) {
+                        inputs[i-1].focus();
+                        currentPin = currentPin.slice(0, -1);
+                    }
                 };
-                
-                // Загружаем с временной меткой чтобы избежать кеша
-                img.src = url + '?test=' + Date.now() + Math.random();
             });
         }
-        
-        async function runTest() {
-            results.innerHTML = '<div class="status">🚀 Начинаю тест загрузки картинок...</div>';
-            
-            for (let i = 0; i < images.length; i++) {
-                const imageName = images[i];
-                const result = await testImage(imageName, i);
-                
-                const div = document.createElement('div');
-                div.className = 'status ' + (result.success ? 'success' : 'error');
-                
-                if (result.success) {
-                    div.innerHTML = `
-                        ✅ ${i+1}. ${imageName} - ЗАГРУЗИЛОСЬ (${result.time}мс)
-                        <img src="${imageName}?t=${Date.now()}" alt="${imageName}">
-                    `;
-                } else {
-                    div.innerHTML = `
-                        ❌ ${i+1}. ${imageName} - НЕ ЗАГРУЗИЛОСЬ (${result.time}мс)
-                        <div style="color:yellow;">Путь: ${window.location.origin}/${imageName}</div>
-                    `;
-                }
-                
-                results.appendChild(div);
-                
-                // Небольшая задержка между запросами
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-            
-            // Итог
-            const summary = document.createElement('div');
-            summary.className = 'status';
-            summary.style.cssText = 'background: #333; padding: 20px; margin-top: 20px; font-size: 18px;';
-            summary.innerHTML = `
-                <h2>📊 ИТОГИ:</h2>
-                <div>✅ Загружено: ${loaded} из ${images.length}</div>
-                <div>❌ Ошибок: ${failed} из ${images.length}</div>
-                <div>📁 Текущий URL: ${window.location.href}</div>
-                <div>🌐 Домен: ${window.location.origin}</div>
-                <div style="margin-top: 20px;">
-                    <button onclick="location.reload()" style="padding: 10px 20px; font-size: 16px;">
-                        🔄 Перезапустить тест
-                    </button>
-                </div>
-            `;
-            
-            results.appendChild(summary);
-            
-            // Дебаг информация
-            console.log('=== ДЕБАГ ИНФОРМАЦИЯ ===');
-            console.log('URL страницы:', window.location.href);
-            console.log('Загружено:', loaded, 'Ошибок:', failed);
-            console.log('Все файлы:', images);
-            
-            // Проверка одной конкретной картинки
-            if (failed > 0) {
-                console.log('\n=== ПРОВЕРЬТЕ ЭТИ ФАЙЛЫ ===');
-                images.forEach((img, idx) => {
-                    console.log(`${idx+1}. ${img} - ${window.location.origin}/${img}`);
-                });
+
+        function checkPin() {
+            if (currentPin === CONFIG.PIN) {
+                document.getElementById('pinSection').style.display = 'none';
+                document.getElementById('mainMenu').style.display = 'block';
+                document.getElementById('pinError').style.display = 'none';
+            } else {
+                document.getElementById('pinError').style.display = 'block';
+                setTimeout(() => {
+                    resetPinInput();
+                    document.getElementById('pinError').style.display = 'none';
+                }, 1000);
             }
         }
-        
-        // Запускаем тест
-        runTest();
+
+        function resetPinInput() {
+            currentPin = "";
+            let inputs = document.querySelectorAll('.pin-input input');
+            inputs.forEach(input => input.value = "");
+            if (inputs[0]) inputs[0].focus();
+        }
+
+        // Функции меню
+        function simulateTime() {
+            let input = document.getElementById('simulatedTime').value;
+            simulatedTime = input || null;
+            loadImage();
+        }
+
+        function changeSlide() {
+            let select = document.getElementById('slideSelect');
+            let value = select.value;
+            
+            if (value === 'auto') {
+                manualImage = null;
+            } else if (value === 'empty') {
+                manualImage = 'empty.png';
+            } else if (value === 'readyto') {
+                manualImage = 'readyto.png';
+            } else if (value === 'tosleep') {
+                manualImage = 'tosleep.png';
+            } else {
+                manualImage = value.padStart(2, '0') + '.png';
+            }
+            
+            loadImage();
+        }
+
+        function refreshPage() {
+            location.reload();
+        }
+
+        function toggleAutoRefresh() {
+            autoRefresh = !autoRefresh;
+            let btn = document.getElementById('refreshBtn');
+            btn.textContent = 'Авто: ' + (autoRefresh ? 'ВКЛ' : 'ВЫКЛ');
+            
+            if (autoRefresh) {
+                startAutoRefresh();
+            } else {
+                clearInterval(refreshInterval);
+            }
+            
+            updateStatus();
+        }
+
+        function showCredits() {
+            document.getElementById('credits').style.display = 'block';
+        }
+
+        function hideCredits() {
+            document.getElementById('credits').style.display = 'none';
+        }
+
+        function updateStatus() {
+            let status = document.getElementById('statusText');
+            if (!status) return;
+            
+            let text = autoRefresh ? 'Авто ВКЛ' : 'Авто ВЫКЛ';
+            if (simulatedTime) text += ', Симуляция';
+            if (manualImage) text += ', Ручной';
+            
+            status.textContent = text;
+        }
     </script>
 </body>
 </html>
