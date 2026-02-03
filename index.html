@@ -1,46 +1,167 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Тест картинок</title>
+    <title>Тест картинок - Скринменеджер</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: black;
+            color: white;
+            padding: 20px;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #444;
+        }
+        .success {
+            color: lime;
+            border-color: lime;
+        }
+        .error {
+            color: red;
+            border-color: red;
+        }
+        img {
+            max-width: 300px;
+            max-height: 200px;
+            margin: 10px;
+            border: 2px solid white;
+        }
+    </style>
 </head>
 <body>
-    <img id="testImg" style="width:100%; height:100%;">
+    <h1>Тест загрузки картинок</h1>
+    <div id="results"></div>
     
     <script>
-        // Простой тест загрузки
+        // Все картинки которые должны быть в корне
         const images = [
-            'empty.png',
-            'missing.png', 
-            '03.png',
-            'readyto.png',
-            'tosleep.png'
+            'empty.png',    // 1. Ночной режим
+            'readyto.png',  // 2. Утренний
+            'tosleep.png',  // 3. Вечерний
+            'missing.png',  // 4. При ошибке
+            '01.png',       // 5. Заставка 1
+            '02.png',       // 6. Заставка 2
+            '03.png',       // 7. Заставка 3 (сегодня 3 фев)
+            '04.png',       // 8. Заставка 4
+            '05.png',       // 9. Заставка 5
+            '06.png',       // 10. Заставка 6
+            '07.png',       // 11. Заставка 7
+            '08.png',       // 12. Заставка 8
+            '09.png',       // 13. Заставка 9
+            '10.png',       // 14. Заставка 10
+            '11.png',       // 15. Заставка 11
+            '12.png',       // 16. Заставка 12
+            '13.png',       // 17. Заставка 13
+            '14.png',       // 18. Заставка 14
+            '15.png',       // 19. Заставка 15
+            '16.png',       // 20. Заставка 16
+            '17.png',       // 21. Заставка 17
+            '18.png',       // 22. Заставка 18
+            '19.png',       // 23. Заставка 19
+            '20.png'        // 24. Заставка 20
         ];
         
-        let current = 0;
-        const img = document.getElementById('testImg');
+        const results = document.getElementById('results');
+        let loaded = 0;
+        let failed = 0;
         
-        function loadNext() {
-            const file = images[current];
-            console.log("Пробуем загрузить:", file);
-            
-            img.onload = () => {
-                console.log("✓ Успех:", file);
-                current = (current + 1) % images.length;
-                setTimeout(loadNext, 3000);
-            };
-            
-            img.onerror = () => {
-                console.log("✗ Ошибка:", file);
-                current = (current + 1) % images.length;
-                setTimeout(loadNext, 1000);
-            };
-            
-            // Добавляем временную метку чтобы избежать кеша
-            img.src = file + '?t=' + Date.now();
+        function testImage(url, index) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const startTime = Date.now();
+                
+                img.onload = function() {
+                    const time = Date.now() - startTime;
+                    loaded++;
+                    resolve({
+                        name: url,
+                        success: true,
+                        time: time,
+                        img: img
+                    });
+                };
+                
+                img.onerror = function() {
+                    failed++;
+                    resolve({
+                        name: url,
+                        success: false,
+                        time: Date.now() - startTime,
+                        img: null
+                    });
+                };
+                
+                // Загружаем с временной меткой чтобы избежать кеша
+                img.src = url + '?test=' + Date.now() + Math.random();
+            });
         }
         
-        // Начинаем тест
-        loadNext();
+        async function runTest() {
+            results.innerHTML = '<div class="status">🚀 Начинаю тест загрузки картинок...</div>';
+            
+            for (let i = 0; i < images.length; i++) {
+                const imageName = images[i];
+                const result = await testImage(imageName, i);
+                
+                const div = document.createElement('div');
+                div.className = 'status ' + (result.success ? 'success' : 'error');
+                
+                if (result.success) {
+                    div.innerHTML = `
+                        ✅ ${i+1}. ${imageName} - ЗАГРУЗИЛОСЬ (${result.time}мс)
+                        <img src="${imageName}?t=${Date.now()}" alt="${imageName}">
+                    `;
+                } else {
+                    div.innerHTML = `
+                        ❌ ${i+1}. ${imageName} - НЕ ЗАГРУЗИЛОСЬ (${result.time}мс)
+                        <div style="color:yellow;">Путь: ${window.location.origin}/${imageName}</div>
+                    `;
+                }
+                
+                results.appendChild(div);
+                
+                // Небольшая задержка между запросами
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Итог
+            const summary = document.createElement('div');
+            summary.className = 'status';
+            summary.style.cssText = 'background: #333; padding: 20px; margin-top: 20px; font-size: 18px;';
+            summary.innerHTML = `
+                <h2>📊 ИТОГИ:</h2>
+                <div>✅ Загружено: ${loaded} из ${images.length}</div>
+                <div>❌ Ошибок: ${failed} из ${images.length}</div>
+                <div>📁 Текущий URL: ${window.location.href}</div>
+                <div>🌐 Домен: ${window.location.origin}</div>
+                <div style="margin-top: 20px;">
+                    <button onclick="location.reload()" style="padding: 10px 20px; font-size: 16px;">
+                        🔄 Перезапустить тест
+                    </button>
+                </div>
+            `;
+            
+            results.appendChild(summary);
+            
+            // Дебаг информация
+            console.log('=== ДЕБАГ ИНФОРМАЦИЯ ===');
+            console.log('URL страницы:', window.location.href);
+            console.log('Загружено:', loaded, 'Ошибок:', failed);
+            console.log('Все файлы:', images);
+            
+            // Проверка одной конкретной картинки
+            if (failed > 0) {
+                console.log('\n=== ПРОВЕРЬТЕ ЭТИ ФАЙЛЫ ===');
+                images.forEach((img, idx) => {
+                    console.log(`${idx+1}. ${img} - ${window.location.origin}/${img}`);
+                });
+            }
+        }
+        
+        // Запускаем тест
+        runTest();
     </script>
 </body>
 </html>
