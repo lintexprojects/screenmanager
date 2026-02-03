@@ -562,4 +562,73 @@ function updateStatusDisplay() {
 }
 
 function showCredits() {
-    console.log('
+    console.log('ℹ️ Показ кредитов');
+    hideAdminMenu();
+    document.getElementById('creditsModal').classList.remove('hidden');
+}
+
+function hideCredits() {
+    document.getElementById('creditsModal').classList.add('hidden');
+}
+
+// Проверка обновлений
+function checkForUpdates() {
+    console.log('🔍 Проверка обновлений...');
+    // Здесь можно добавить логику проверки новых версий
+}
+
+// Функция для принудительного обновления с сервера
+function forceUpdateFromServer() {
+    console.log('🔄 Принудительная проверка обновлений с сервера');
+    updateSlideshow();
+}
+
+// Логирование состояния системы
+function logSystemStatus() {
+    console.log('=== СТАТУС СИСТЕМЫ ===');
+    console.log('Версия:', CONFIG.VERSION);
+    console.log('Разрешение:', screenResolution.width, '×', screenResolution.height);
+    console.log('Автообновление:', isAutoRefreshEnabled ? 'ВКЛ' : 'ВЫКЛ');
+    console.log('Режим:', simulatedTime ? 'Симуляция' : 'Реальное время');
+    console.log('Текущий период:', getCurrentPeriod());
+    console.log('Текущий файл:', getImageFilenameForPeriod());
+    console.log('====================');
+}
+
+// Инициализация при загрузке страницы
+window.onload = function() {
+    // Логирование запуска
+    console.log('🚀 Инициализация Скринменеджера ЛИнТех 28...');
+    
+    // Первоначальная загрузка
+    updateSlideshow();
+    
+    // Логирование статуса через 5 секунд
+    setTimeout(logSystemStatus, 5000);
+    
+    // Показать подсказку о горячих клавишах
+    console.log('💡 Подсказка: Нажмите "1" для открытия админ-панели');
+};
+
+// Глобальный обработчик ошибок
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('❌ Глобальная ошибка:', message);
+    console.error('Файл:', source);
+    console.error('Строка:', lineno);
+    return true; // Предотвращаем стандартное сообщение об ошибке
+};
+
+// Экспорт функций для глобального доступа (если нужно)
+window.ScreenManager = {
+    version: CONFIG.VERSION,
+    update: updateSlideshow,
+    openAdmin: toggleAdminMenu,
+    showCredits: showCredits,
+    forceRefresh: forceUpdateFromServer,
+    getStatus: logSystemStatus
+};
+
+// Сообщение об успешной загрузке
+console.log('✅ Скринменеджер ЛИнТех 28 успешно загружен!');
+console.log('📌 Версия:', CONFIG.VERSION);
+console.log('📌 Автор: Лев П., лИнТех 28, 2026');
