@@ -1,327 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Скринменеджер ЛИнТех 28</title>
-    <style>
-        * { margin: 0; padding: 0; }
-        body, html { 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden; 
-            background: #000;
-        }
-        #screenImage {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        .admin-panel {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: #2c3e50;
-            border: 2px solid #34495e;
-            padding: 15px;
-            font-family: monospace;
-            color: #ecf0f1;
-            display: none;
-            z-index: 1000;
-        }
-        .pin-input {
-            margin: 10px 0;
-        }
-        .pin-input input {
-            width: 40px;
-            height: 50px;
-            text-align: center;
-            font-size: 24px;
-            margin: 0 5px;
-            background: #34495e;
-            border: 1px solid #7f8c8d;
-            color: white;
-        }
-        button {
-            padding: 8px 15px;
-            margin: 5px;
-            background: #3498db;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-family: monospace;
-        }
-        button:hover {
-            background: #2980b9;
-        }
-        select, input[type="datetime-local"] {
-            padding: 8px;
-            margin: 5px;
-            background: #34495e;
-            border: 1px solid #7f8c8d;
-            color: white;
-            font-family: monospace;
-        }
-    </style>
+    <title>Тест картинок</title>
 </head>
 <body>
-    <img id="screenImage" src="" alt="">
+    <img id="testImg" style="width:100%; height:100%;">
     
-    <div id="adminPanel" class="admin-panel">
-        <h3>СКРИНМЕНЕДЖЕР v1.0</h3>
-        <div id="pinSection">
-            <div>PIN код:</div>
-            <div class="pin-input">
-                <input type="password" maxlength="1" data-index="0">
-                <input type="password" maxlength="1" data-index="1">
-                <input type="password" maxlength="1" data-index="2">
-                <input type="password" maxlength="1" data-index="3">
-            </div>
-            <div id="pinError" style="color: #e74c3c; display: none;">Неверный PIN</div>
-        </div>
-        
-        <div id="mainMenu" style="display: none;">
-            <div>
-                <button onclick="simulateTime()">Симит. время</button>
-                <input type="datetime-local" id="simulatedTime">
-            </div>
-            <div>
-                <button onclick="changeSlide()">Сменить заставку</button>
-                <select id="slideSelect">
-                    <option value="auto">Авто</option>
-                    <option value="empty">empty.png</option>
-                    <option value="readyto">readyto.png</option>
-                    <option value="tosleep">tosleep.png</option>
-                    <option value="1">Заставка 1</option>
-                    <option value="2">Заставка 2</option>
-                    <option value="3">Заставка 3</option>
-                    <option value="4">Заставка 4</option>
-                    <option value="5">Заставка 5</option>
-                </select>
-            </div>
-            <div>
-                <button onclick="refreshPage()">Обновить стр.</button>
-                <button onclick="toggleAutoRefresh()" id="refreshBtn">Авто: ВКЛ</button>
-            </div>
-            <div>
-                <button onclick="showCredits()">Кредиты</button>
-                <button onclick="hideAdmin()" style="background: #e74c3c;">Закрыть</button>
-            </div>
-            <div style="margin-top: 15px; color: #95a5a6; font-size: 12px;">
-                Статус: <span id="statusText">Онлайн</span>
-            </div>
-        </div>
-    </div>
-    
-    <div id="credits" class="admin-panel" style="display: none; width: 300px;">
-        <h3>КРЕДИТЫ</h3>
-        <div style="padding: 10px; background: #34495e; margin: 10px 0;">
-            "Идея приведена в код Львом П.<br>лИнТех 28 2026"
-        </div>
-        <button onclick="hideCredits()" style="background: #27ae60;">Закрыть</button>
-    </div>
-
     <script>
-        // Конфиг
-        const CONFIG = {
-            PIN: "2855",
-            AUTO_REFRESH: 90000,
-            IMAGE_PATH: ""  // Картинки в корне
-        };
-
-        // Глобальные переменные
-        let currentPin = "";
-        let autoRefresh = true;
-        let refreshInterval;
-        let simulatedTime = null;
-        let manualImage = null;
-
-        // Инициализация
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '1') {
-                showAdmin();
-            }
-            if (e.key === 'Escape') {
-                hideAdmin();
-                hideCredits();
-            }
-        });
-
-        window.onload = function() {
-            initPinInput();
-            loadImage();
-            startAutoRefresh();
-            console.log("Скринменеджер запущен");
-        };
-
-        // Основная функция загрузки картинки
-        function loadImage() {
-            let filename = getCurrentImage();
-            let imgUrl = filename + '?t=' + Date.now();
-            let img = document.getElementById('screenImage');
+        // Простой тест загрузки
+        const images = [
+            'empty.png',
+            'missing.png', 
+            '03.png',
+            'readyto.png',
+            'tosleep.png'
+        ];
+        
+        let current = 0;
+        const img = document.getElementById('testImg');
+        
+        function loadNext() {
+            const file = images[current];
+            console.log("Пробуем загрузить:", file);
             
-            console.log("Загружаем:", filename);
-            
-            img.onload = function() {
-                console.log("Картинка загружена:", filename);
-                updateStatus();
+            img.onload = () => {
+                console.log("✓ Успех:", file);
+                current = (current + 1) % images.length;
+                setTimeout(loadNext, 3000);
             };
             
-            img.onerror = function() {
-                console.log("Ошибка загрузки:", filename);
-                // Пробуем missing.png
-                if (filename !== 'missing.png') {
-                    img.src = 'missing.png?t=' + Date.now();
-                }
+            img.onerror = () => {
+                console.log("✗ Ошибка:", file);
+                current = (current + 1) % images.length;
+                setTimeout(loadNext, 1000);
             };
             
-            img.src = imgUrl;
+            // Добавляем временную метку чтобы избежать кеша
+            img.src = file + '?t=' + Date.now();
         }
-
-        // Определяем какая картинка нужна
-        function getCurrentImage() {
-            if (manualImage) return manualImage;
-            
-            let now = simulatedTime ? new Date(simulatedTime) : new Date();
-            let hour = now.getHours();
-            let minute = now.getMinutes();
-            let time = hour + minute/60;
-            
-            // Ночь: 19:00-7:00
-            if (time >= 19 || time < 7) return 'empty.png';
-            // Утро: 7:00-7:10
-            if (time >= 7 && time < 7.167) return 'readyto.png';
-            // Вечер: 17:00-19:00
-            if (time >= 17 && time < 19) return 'tosleep.png';
-            // День: 7:10-17:00 - заставки по дням
-            let day = now.getDate();
-            let slide = ((day - 1) % 20) + 1;
-            return slide.toString().padStart(2, '0') + '.png';
-        }
-
-        // Автообновление
-        function startAutoRefresh() {
-            if (refreshInterval) clearInterval(refreshInterval);
-            if (!autoRefresh) return;
-            
-            refreshInterval = setInterval(() => {
-                loadImage();
-            }, CONFIG.AUTO_REFRESH);
-        }
-
-        // Админ-панель
-        function showAdmin() {
-            document.getElementById('adminPanel').style.display = 'block';
-            resetPinInput();
-        }
-
-        function hideAdmin() {
-            document.getElementById('adminPanel').style.display = 'none';
-            hideCredits();
-        }
-
-        function initPinInput() {
-            let inputs = document.querySelectorAll('.pin-input input');
-            inputs.forEach((input, i) => {
-                input.oninput = (e) => {
-                    if (e.target.value.length === 1) {
-                        currentPin += e.target.value;
-                        if (i < 3) inputs[i+1].focus();
-                        else checkPin();
-                    }
-                };
-                input.onkeydown = (e) => {
-                    if (e.key === 'Backspace' && !e.target.value && i > 0) {
-                        inputs[i-1].focus();
-                        currentPin = currentPin.slice(0, -1);
-                    }
-                };
-            });
-        }
-
-        function checkPin() {
-            if (currentPin === CONFIG.PIN) {
-                document.getElementById('pinSection').style.display = 'none';
-                document.getElementById('mainMenu').style.display = 'block';
-                document.getElementById('pinError').style.display = 'none';
-            } else {
-                document.getElementById('pinError').style.display = 'block';
-                setTimeout(() => {
-                    resetPinInput();
-                    document.getElementById('pinError').style.display = 'none';
-                }, 1000);
-            }
-        }
-
-        function resetPinInput() {
-            currentPin = "";
-            let inputs = document.querySelectorAll('.pin-input input');
-            inputs.forEach(input => input.value = "");
-            if (inputs[0]) inputs[0].focus();
-        }
-
-        // Функции меню
-        function simulateTime() {
-            let input = document.getElementById('simulatedTime').value;
-            simulatedTime = input || null;
-            loadImage();
-        }
-
-        function changeSlide() {
-            let select = document.getElementById('slideSelect');
-            let value = select.value;
-            
-            if (value === 'auto') {
-                manualImage = null;
-            } else if (value === 'empty') {
-                manualImage = 'empty.png';
-            } else if (value === 'readyto') {
-                manualImage = 'readyto.png';
-            } else if (value === 'tosleep') {
-                manualImage = 'tosleep.png';
-            } else {
-                manualImage = value.padStart(2, '0') + '.png';
-            }
-            
-            loadImage();
-        }
-
-        function refreshPage() {
-            location.reload();
-        }
-
-        function toggleAutoRefresh() {
-            autoRefresh = !autoRefresh;
-            let btn = document.getElementById('refreshBtn');
-            btn.textContent = 'Авто: ' + (autoRefresh ? 'ВКЛ' : 'ВЫКЛ');
-            
-            if (autoRefresh) {
-                startAutoRefresh();
-            } else {
-                clearInterval(refreshInterval);
-            }
-            
-            updateStatus();
-        }
-
-        function showCredits() {
-            document.getElementById('credits').style.display = 'block';
-        }
-
-        function hideCredits() {
-            document.getElementById('credits').style.display = 'none';
-        }
-
-        function updateStatus() {
-            let status = document.getElementById('statusText');
-            if (!status) return;
-            
-            let text = autoRefresh ? 'Авто ВКЛ' : 'Авто ВЫКЛ';
-            if (simulatedTime) text += ', Симуляция';
-            if (manualImage) text += ', Ручной';
-            
-            status.textContent = text;
-        }
+        
+        // Начинаем тест
+        loadNext();
     </script>
 </body>
 </html>
